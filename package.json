@@ -1,0 +1,26 @@
+{
+  "name": "wix-globe-pointer",
+  "version": "1.0.0",
+  "description": "Three.js Globe Custom Element for Wix Studio - hosted on Vercel",
+  "main": "public/globe-pointer.js",
+  "scripts": {
+    "build": "esbuild src/globe-pointer.js --bundle --minify --format=iife --outfile=public/globe-pointer.js",
+    "dev": "esbuild src/globe-pointer.js --bundle --format=iife --outfile=public/globe-pointer.js --watch"
+  },
+  "keywords": [
+    "three.js",
+    "wix",
+    "custom-element",
+    "globe",
+    "webgl"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "three": "^0.166.0"
+  },
+  "devDependencies": {
+    "esbuild": "^0.23.0"
+  }
+}
+
