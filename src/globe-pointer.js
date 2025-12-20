@@ -113,10 +113,27 @@ class GlobePointer extends HTMLElement {
     this.setupDOM();
     this.initScene();
     window.addEventListener('resize', this._resizeHandler);
+    
+    // Initiale Größe nach kurzer Verzögerung setzen, damit das Element gerendert ist
+    setTimeout(() => {
+      this.updateSize();
+    }, 100);
+    
+    // ResizeObserver für Größenänderungen des Elements
+    if (window.ResizeObserver) {
+      this._resizeObserver = new ResizeObserver(() => {
+        this.updateSize();
+      });
+      this._resizeObserver.observe(this);
+    }
   }
 
   disconnectedCallback() {
     window.removeEventListener('resize', this._resizeHandler);
+    if (this._resizeObserver) {
+      this._resizeObserver.disconnect();
+      this._resizeObserver = null;
+    }
     if (this._animationFrame) {
       cancelAnimationFrame(this._animationFrame);
       this._animationFrame = null;
@@ -137,14 +154,28 @@ class GlobePointer extends HTMLElement {
   }
 
   setupDOM() {
+    // Wix Custom Element braucht eine Mindesthöhe
+    this.style.display = 'block';
+    this.style.width = '100%';
+    this.style.minHeight = '400px';
+    this.style.height = '100%';
+
     const wrapper = document.createElement('div');
     wrapper.className = 'globe-page';
 
     wrapper.innerHTML = `
       <style>
+        :host {
+          display: block;
+          width: 100%;
+          min-height: 400px;
+          height: 100%;
+        }
+        
         .globe-page {
           width: 100%;
           height: 100%;
+          min-height: 400px;
           display: flex;
           justify-content: center;
           align-items: center;
@@ -325,14 +356,27 @@ class GlobePointer extends HTMLElement {
   }
 
   updateSize() {
-    const minSide = 0.5 * Math.min(window.innerWidth, window.innerHeight);
-    this.containerEl.style.width = `${minSide}px`;
-    this.containerEl.style.height = `${minSide}px`;
-    this.renderer.setSize(minSide, minSide);
+    // Größe basierend auf dem tatsächlichen Element, nicht dem Window
+    const rect = this.getBoundingClientRect();
+    const elementWidth = rect.width || this.offsetWidth || 400;
+    const elementHeight = rect.height || this.offsetHeight || 400;
+    
+    // Verwende die kleinere Dimension für einen quadratischen Globe
+    const size = Math.min(elementWidth, elementHeight);
+    const finalSize = Math.max(size, 300); // Mindestgröße von 300px
+    
+    if (this.containerEl) {
+      this.containerEl.style.width = `${finalSize}px`;
+      this.containerEl.style.height = `${finalSize}px`;
+    }
+    
+    if (this.renderer) {
+      this.renderer.setSize(finalSize, finalSize);
+    }
 
     // Kleinere Punkte für bessere Performance: 0.01 statt 0.04
     if (this.mapMaterial?.uniforms?.u_dot_size) {
-      this.mapMaterial.uniforms.u_dot_size.value = 0.01 * minSide;
+      this.mapMaterial.uniforms.u_dot_size.value = 0.01 * finalSize;
     }
   }
 }
