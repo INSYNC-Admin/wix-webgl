@@ -2,7 +2,7 @@
 'use strict';
 
 // Version für Debugging - wird bei jedem Build aktualisiert
-const GLOBE_POINTER_VERSION = '1.5.0';
+const GLOBE_POINTER_VERSION = '1.6.0';
 
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
@@ -223,6 +223,7 @@ class GlobePointer extends HTMLElement {
           box-sizing: border-box;
           margin: 0;
           padding: 0;
+          /* Keine max-width/max-height Beschränkungen - Größe wird per JavaScript gesetzt */
         }
 
         canvas {
@@ -394,7 +395,7 @@ class GlobePointer extends HTMLElement {
       return;
     }
 
-    // Größe basierend auf dem tatsächlichen Element, nicht dem Window
+    // Größe basierend auf dem tatsächlichen Element
     const rect = this.getBoundingClientRect();
     const elementWidth = Math.max(rect.width || this.clientWidth || this.offsetWidth || 0, 0);
     const elementHeight = Math.max(rect.height || this.clientHeight || this.offsetHeight || 0, 0);
@@ -405,15 +406,19 @@ class GlobePointer extends HTMLElement {
       return;
     }
     
-    // Globe soll 80% der Breite einnehmen
-    const targetWidth = elementWidth * 0.8;
-    // Globe soll aber auch nicht höher sein als 80% der Höhe
-    const targetHeight = elementHeight * 0.8;
+    // Globe soll genau 80% der Breite einnehmen
+    let targetSize = elementWidth * 0.8;
     
-    // Verwende die kleinere Dimension, damit der Globe immer passt und quadratisch bleibt
-    const finalSize = Math.min(targetWidth, targetHeight);
+    // Sicherstellen, dass der Globe nicht größer als das Element wird
+    // (falls 80% größer ist als die Höhe, dann Höhe verwenden)
+    if (targetSize > elementHeight) {
+      targetSize = elementHeight * 0.8;
+    }
     
-    // Container auf quadratische Größe setzen (80% der kleineren Dimension)
+    // Mindestgröße für sehr kleine Elemente
+    const finalSize = Math.max(targetSize, 100);
+    
+    // Container auf quadratische Größe setzen (80% der Breite, maximal 80% der Höhe)
     this.containerEl.style.width = `${finalSize}px`;
     this.containerEl.style.height = `${finalSize}px`;
     
