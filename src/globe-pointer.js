@@ -2,7 +2,7 @@
 'use strict';
 
 // Version für Debugging - wird bei jedem Build aktualisiert
-const GLOBE_POINTER_VERSION = '1.4.0';
+const GLOBE_POINTER_VERSION = '1.5.0';
 
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
@@ -210,28 +210,25 @@ class GlobePointer extends HTMLElement {
           width: 100%;
           height: 100%;
           min-height: 400px;
-          display: flex;
-          justify-content: center;
-          align-items: center;
           position: relative;
           box-sizing: border-box;
           overflow: hidden;
         }
 
         .globe-wrapper {
-          position: relative;
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
           box-sizing: border-box;
-          max-width: 100%;
-          max-height: 100%;
-          flex-shrink: 0;
-          /* Zentrierung wird durch Flexbox-Parent (.globe-page) sichergestellt */
+          margin: 0;
+          padding: 0;
         }
 
         canvas {
           display: block;
-          position: absolute;
-          top: 0;
-          left: 0;
+          width: 100%;
+          height: 100%;
         }
       </style>
       <div class="globe-wrapper">

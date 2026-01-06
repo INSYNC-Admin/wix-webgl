@@ -3902,28 +3902,25 @@ void main() {
           width: 100%;
           height: 100%;
           min-height: 400px;
-          display: flex;
-          justify-content: center;
-          align-items: center;
           position: relative;
           box-sizing: border-box;
           overflow: hidden;
         }
 
         .globe-wrapper {
-          position: relative;
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
           box-sizing: border-box;
-          max-width: 100%;
-          max-height: 100%;
-          flex-shrink: 0;
-          /* Zentrierung wird durch Flexbox-Parent (.globe-page) sichergestellt */
+          margin: 0;
+          padding: 0;
         }
 
         canvas {
           display: block;
-          position: absolute;
-          top: 0;
-          left: 0;
+          width: 100%;
+          height: 100%;
         }
       </style>
       <div class="globe-wrapper">
