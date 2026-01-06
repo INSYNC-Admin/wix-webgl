@@ -2,7 +2,7 @@
 'use strict';
 
 // Version für Debugging - wird bei jedem Build aktualisiert
-const GLOBE_POINTER_VERSION = '1.3.0';
+const GLOBE_POINTER_VERSION = '1.4.0';
 
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
@@ -220,11 +220,11 @@ class GlobePointer extends HTMLElement {
 
         .globe-wrapper {
           position: relative;
-          margin: 0 auto;
           box-sizing: border-box;
           max-width: 100%;
           max-height: 100%;
           flex-shrink: 0;
+          /* Zentrierung wird durch Flexbox-Parent (.globe-page) sichergestellt */
         }
 
         canvas {
@@ -408,31 +408,29 @@ class GlobePointer extends HTMLElement {
       return;
     }
     
-    // Verwende die kleinere Dimension für einen quadratischen Globe
-    // WICHTIG: Globe darf NIE größer als das Element sein
-    const size = Math.min(elementWidth, elementHeight);
-    // Keine Mindestgröße mehr - Globe passt sich immer an das Element an
-    const finalSize = Math.max(size, 50); // Nur sehr kleine Mindestgröße für Funktionalität
+    // Globe soll 80% der Breite einnehmen
+    const targetWidth = elementWidth * 0.8;
+    // Globe soll aber auch nicht höher sein als 80% der Höhe
+    const targetHeight = elementHeight * 0.8;
     
-    // Stelle sicher, dass der Globe nie größer als das Element wird
-    const maxSize = Math.min(elementWidth, elementHeight);
-    const clampedSize = Math.min(finalSize, maxSize);
+    // Verwende die kleinere Dimension, damit der Globe immer passt und quadratisch bleibt
+    const finalSize = Math.min(targetWidth, targetHeight);
     
-    // Container auf quadratische Größe setzen (immer die kleinere Dimension)
-    this.containerEl.style.width = `${clampedSize}px`;
-    this.containerEl.style.height = `${clampedSize}px`;
+    // Container auf quadratische Größe setzen (80% der kleineren Dimension)
+    this.containerEl.style.width = `${finalSize}px`;
+    this.containerEl.style.height = `${finalSize}px`;
     
     // Renderer auf die exakte Canvas-Größe setzen
-    this.renderer.setSize(clampedSize, clampedSize, false);
+    this.renderer.setSize(finalSize, finalSize, false);
 
     // Kleinere Punkte für bessere Performance: 0.01 statt 0.04
     if (this.mapMaterial?.uniforms?.u_dot_size) {
-      this.mapMaterial.uniforms.u_dot_size.value = 0.01 * clampedSize;
+      this.mapMaterial.uniforms.u_dot_size.value = 0.01 * finalSize;
     }
     
     // Track letzte Größe für Resize-Optimierung
-    if (!this._lastSize || Math.abs(this._lastSize - clampedSize) > 5) {
-      this._lastSize = clampedSize;
+    if (!this._lastSize || Math.abs(this._lastSize - finalSize) > 5) {
+      this._lastSize = finalSize;
     }
   }
 }
