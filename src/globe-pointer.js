@@ -1,6 +1,9 @@
 /// <reference lib="dom" />
 'use strict';
 
+// Version für Debugging - wird bei jedem Build aktualisiert
+const GLOBE_POINTER_VERSION = '1.2.0';
+
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 
@@ -104,9 +107,18 @@ class GlobePointer extends HTMLElement {
     this.canvas3D = null;
 
     this.dragged = false;
-    this._resizeHandler = () => this.updateSize();
+    this._resizeHandler = () => {
+      // Throttle resize events für bessere Performance
+      if (this._resizeTimeout) {
+        clearTimeout(this._resizeTimeout);
+      }
+      this._resizeTimeout = setTimeout(() => {
+        this.updateSize();
+      }, 100);
+    };
     this._needsRaycast = false;
     this._animationFrame = null;
+    this._lastSize = null;
   }
 
   connectedCallback() {
@@ -121,8 +133,14 @@ class GlobePointer extends HTMLElement {
     
     // ResizeObserver für Größenänderungen des Elements
     if (window.ResizeObserver) {
-      this._resizeObserver = new ResizeObserver(() => {
-        this.updateSize();
+      this._resizeObserver = new ResizeObserver((entries) => {
+        // Throttle ResizeObserver events
+        if (this._resizeTimeout) {
+          clearTimeout(this._resizeTimeout);
+        }
+        this._resizeTimeout = setTimeout(() => {
+          this.updateSize();
+        }, 50);
       });
       this._resizeObserver.observe(this);
     }
@@ -130,6 +148,10 @@ class GlobePointer extends HTMLElement {
 
   disconnectedCallback() {
     window.removeEventListener('resize', this._resizeHandler);
+    if (this._resizeTimeout) {
+      clearTimeout(this._resizeTimeout);
+      this._resizeTimeout = null;
+    }
     if (this._resizeObserver) {
       this._resizeObserver.disconnect();
       this._resizeObserver = null;
@@ -159,6 +181,7 @@ class GlobePointer extends HTMLElement {
     this.style.width = '100%';
     this.style.minHeight = '400px';
     this.style.height = '100%';
+    this.style.position = 'relative';
 
     const wrapper = document.createElement('div');
     wrapper.className = 'globe-page';
@@ -170,6 +193,8 @@ class GlobePointer extends HTMLElement {
           width: 100%;
           min-height: 400px;
           height: 100%;
+          position: relative;
+          box-sizing: border-box;
         }
         
         .globe-page {
@@ -180,21 +205,19 @@ class GlobePointer extends HTMLElement {
           justify-content: center;
           align-items: center;
           position: relative;
+          box-sizing: border-box;
         }
 
         .globe-wrapper {
           position: relative;
-          width: 100%;
-          height: 100%;
-          max-width: 600px;
-          max-height: 600px;
           margin: 0 auto;
+          box-sizing: border-box;
         }
 
         canvas {
           display: block;
-          position: absolute;
-          inset: 0;
+          width: 100%;
+          height: 100%;
         }
       </style>
       <div class="globe-wrapper">
@@ -239,7 +262,7 @@ class GlobePointer extends HTMLElement {
       },
       undefined,
       (err) => {
-        console.error('Error loading texture:', err);
+        console.error('Globe Pointer - Error loading texture:', err);
       }
     );
   }
@@ -358,25 +381,33 @@ class GlobePointer extends HTMLElement {
   updateSize() {
     // Größe basierend auf dem tatsächlichen Element, nicht dem Window
     const rect = this.getBoundingClientRect();
-    const elementWidth = rect.width || this.offsetWidth || 400;
-    const elementHeight = rect.height || this.offsetHeight || 400;
+    const elementWidth = rect.width || this.clientWidth || this.offsetWidth || 400;
+    const elementHeight = rect.height || this.clientHeight || this.offsetHeight || 400;
     
-    // Verwende die kleinere Dimension für einen quadratischen Globe
+    // Verwende die kleinere Dimension für einen quadratischen Globe, der immer passt
     const size = Math.min(elementWidth, elementHeight);
-    const finalSize = Math.max(size, 300); // Mindestgröße von 300px
+    // Mindestgröße für sehr kleine Elemente
+    const finalSize = Math.max(size, 200);
     
-    if (this.containerEl) {
+    if (this.containerEl && this.canvas3D) {
+      // Container auf quadratische Größe setzen (immer die kleinere Dimension)
       this.containerEl.style.width = `${finalSize}px`;
       this.containerEl.style.height = `${finalSize}px`;
     }
     
     if (this.renderer) {
-      this.renderer.setSize(finalSize, finalSize);
+      // Renderer auf die tatsächliche Canvas-Größe setzen
+      this.renderer.setSize(finalSize, finalSize, false);
     }
 
     // Kleinere Punkte für bessere Performance: 0.01 statt 0.04
     if (this.mapMaterial?.uniforms?.u_dot_size) {
       this.mapMaterial.uniforms.u_dot_size.value = 0.01 * finalSize;
+    }
+    
+    // Track letzte Größe für Resize-Optimierung
+    if (!this._lastSize || Math.abs(this._lastSize - finalSize) > 10) {
+      this._lastSize = finalSize;
     }
   }
 }

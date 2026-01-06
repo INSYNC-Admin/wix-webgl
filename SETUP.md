@@ -127,3 +127,4 @@ Bei Änderungen:
 - Prüfe Texture-Größe (sollte < 1MB sein)
 - Reduziere `IcosahedronGeometry` Detail weiter (z.B. von 5 auf 4)
 
+
