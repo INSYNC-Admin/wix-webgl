@@ -344,8 +344,8 @@ class DisplacementTrigger extends HTMLElement {
     this.material = new THREE.ShaderMaterial({
       fragmentShader: FRAGMENT_SHADER,
       uniforms: {
-        intensity1: { type: 'f', value: 0.25 },
-        intensity2: { type: 'f', value: 0.25 },
+        intensity1: { type: 'f', value: 0.1 },
+        intensity2: { type: 'f', value: 0.1 },
         dispFactor1: { type: 'f', value: 0.0 }, // Bild 1 → Bild 2
         dispFactor2: { type: 'f', value: 0.0 }, // Bild 2 → Bild 3
         angle1: { type: 'f', value: Math.PI / 4 },
@@ -436,22 +436,22 @@ class DisplacementTrigger extends HTMLElement {
         dispFactor2: 0.0
       },
       {
-        progress: 0.30, // Bild 1 bleibt bis 30%
+        progress: 0.23, // Bild 1 bleibt bis 30%
         dispFactor1: 0.0,
         dispFactor2: 0.0
       },
       {
-        progress: 0.35, // Transition Bild 1 → 2 abgeschlossen (30-35%)
+        progress: 0.36, // Transition Bild 1 → 2 abgeschlossen (30-35%)
         dispFactor1: 1.0,
         dispFactor2: 0.0
       },
       {
-        progress: 0.60, // Bild 2 bleibt bis 60%
+        progress: 0.50, // Bild 2 bleibt bis 60%
         dispFactor1: 1.0,
         dispFactor2: 0.0
       },
       {
-        progress: 0.65, // Transition Bild 2 → 3 abgeschlossen (60-65%)
+        progress: 0.66, // Transition Bild 2 → 3 abgeschlossen (60-65%)
         dispFactor1: 1.0,
         dispFactor2: 1.0
       },
