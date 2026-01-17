@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Displacement Transition Test</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: sans-serif;
+            background: #f5f5f5;
+        }
+        
+        .spacer {
+            height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+        }
+        
+        .threeTrigger {
+            width: 100%;
+            height: 600px;
+            background: #1a1a1a;
+            position: relative;
+            margin: 50px 0;
+        }
+        
+        .spacer-bottom {
+            height: 100vh;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+        }
+        
+        .info {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 15px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            z-index: 1000;
+        }
+    </style>
+</head>
+<body>
+    <div class="spacer">
+        <div>Scroll nach unten für Displacement Transition →</div>
+    </div>
+    
+    <!-- Displacement Transition Element -->
+    <div 
+        class="threeTrigger" 
+        data-image1="https://cdn.prod.website-files.com/691dda446874d92d72af7d03/696b998ca6fd3a1267e1342b_image%20315.avif"
+        data-image2="https://cdn.prod.website-files.com/691dda446874d92d72af7d03/696b998c9085c8dc397ba853_image%20321.avif"
+        data-image3="https://cdn.prod.website-files.com/691dda446874d92d72af7d03/696b998c52fe6011f65559df_image%20322.avif"
+        data-displacement="https://images.unsplash.com/photo-1465146633011-14f8e0781093?fit=crop&w=512&h=512"
+    ></div>
+    
+    <div class="spacer-bottom">
+        <div>← Scroll zurück für reverse Transition</div>
+    </div>
+    
+    <div class="info">
+        <strong>Scroll-Progress:</strong><br>
+        • 0% → 38%: Bild 1 → Bild 2<br>
+        • 38% → 63%: Bild 2 → Bild 3<br>
+        • 63% → 100%: Bild 3
+    </div>
+    
+    <script src="displacement-transition.js"></script>
+</body>
+</html>

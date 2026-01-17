@@ -128,3 +128,4 @@ Bei Änderungen:
 - Reduziere `IcosahedronGeometry` Detail weiter (z.B. von 5 auf 4)
 
 
+

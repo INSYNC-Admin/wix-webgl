@@ -1,17 +1,23 @@
 {
-  "name": "wix-globe-pointer",
+  "name": "wix-webgl-components",
   "version": "1.0.0",
-  "description": "Three.js Globe Custom Element for Wix Studio - hosted on Vercel",
+  "description": "Three.js WebGL Components for Wix Studio - Globe Pointer & Displacement Transition",
   "main": "public/globe-pointer.js",
   "scripts": {
-    "build": "esbuild src/globe-pointer.js --bundle --minify --format=iife --outfile=public/globe-pointer.js",
-    "dev": "esbuild src/globe-pointer.js --bundle --format=iife --outfile=public/globe-pointer.js --watch"
+    "build:globe": "esbuild src/globe-pointer.js --bundle --minify --format=iife --outfile=public/globe-pointer.js",
+    "dev:globe": "esbuild src/globe-pointer.js --bundle --format=iife --outfile=public/globe-pointer.js --watch",
+    "build:displacement": "cd displacement-transition && npm run build",
+    "dev:displacement": "cd displacement-transition && npm run dev",
+    "build": "npm run build:globe && npm run build:displacement",
+    "install:all": "npm install && cd displacement-transition && npm install"
   },
   "keywords": [
     "three.js",
     "wix",
     "custom-element",
     "globe",
+    "displacement",
+    "scrolltrigger",
     "webgl"
   ],
   "author": "",
@@ -23,5 +29,6 @@
     "esbuild": "^0.23.0"
   }
 }
+
 
 

@@ -1,0 +1,27 @@
+{
+  "name": "displacement-transition",
+  "version": "1.0.0",
+  "description": "Three.js Displacement Map Transition with GSAP ScrollTrigger for Wix Studio",
+  "main": "public/displacement-transition.js",
+  "scripts": {
+    "build": "esbuild src/displacement-transition.js --bundle --minify --format=iife --outfile=public/displacement-transition.js",
+    "dev": "esbuild src/displacement-transition.js --bundle --format=iife --outfile=public/displacement-transition.js --watch"
+  },
+  "keywords": [
+    "three.js",
+    "gsap",
+    "scrolltrigger",
+    "displacement",
+    "transition",
+    "wix"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "three": "^0.166.0",
+    "gsap": "^3.12.5"
+  },
+  "devDependencies": {
+    "esbuild": "^0.23.0"
+  }
+}

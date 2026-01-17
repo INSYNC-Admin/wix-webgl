@@ -1,4 +1,48 @@
-# Wix Globe Pointer - Three.js Custom Element
+# Wix WebGL Components
+
+Ein Repository mit verschiedenen Three.js WebGL-Komponenten für Wix Studio, gehostet auf Vercel.
+
+## 📦 Projekte
+
+### 1. 🌍 Globe Pointer
+Ein performantes Three.js Globe Custom Element mit warmem Orange/Gelb-Gradient.
+
+- **Datei**: `public/globe-pointer.js`
+- **Dokumentation**: Siehe [Globe Pointer README](./README.md#globe-pointer)
+- **Source**: `src/globe-pointer.js`
+
+### 2. 🎨 Displacement Transition
+Ein ScrollTrigger-basierter Displacement-Map-Übergang zwischen 3 Bildern.
+
+- **Datei**: `displacement-transition/public/displacement-transition.js`
+- **Dokumentation**: Siehe [Displacement Transition README](./displacement-transition/README.md)
+- **Source**: `displacement-transition/src/displacement-transition.js`
+
+## 🚀 Quick Start
+
+### Alle Projekte bauen
+
+```bash
+# Dependencies installieren
+npm run install:all
+
+# Alle Projekte bauen
+npm run build
+```
+
+### Einzelne Projekte bauen
+
+```bash
+# Globe Pointer
+npm run build:globe
+
+# Displacement Transition
+npm run build:displacement
+```
+
+---
+
+## 🌍 Globe Pointer
 
 Ein performantes Three.js Globe Custom Element für Wix Studio, gehostet auf Vercel.
 
@@ -28,7 +72,7 @@ npm install
 ### 2. Build erstellen
 
 ```bash
-npm run build
+npm run build:globe
 ```
 
 Dies erstellt die optimierte `public/globe-pointer.js` Datei.
@@ -36,7 +80,7 @@ Dies erstellt die optimierte `public/globe-pointer.js` Datei.
 ### 3. Development-Modus (mit Watch)
 
 ```bash
-npm run dev
+npm run dev:globe
 ```
 
 ## 📦 Deployment auf Vercel
@@ -162,6 +206,3 @@ Im `FRAGMENT_SHADER_MAP` die Farbwerte `c1`, `c2`, `c3` ändern.
 ## 📝 Lizenz
 
 MIT
-
-# wix-webgl
-
