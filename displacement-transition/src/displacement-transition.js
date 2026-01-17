@@ -527,6 +527,7 @@ class DisplacementTrigger extends HTMLElement {
       markers: true, // Debug-Marker aktivieren
       onUpdate: (self) => {
         const progress = self.progress; // 0.0 → 1.0
+        console.log(`[DisplacementTrigger] Scroll Progress: ${(progress * 100).toFixed(2)}%`);
         interpolateStep(progress);
       },
       onEnter: () => {
