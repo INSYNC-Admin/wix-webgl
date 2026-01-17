@@ -103,7 +103,7 @@ class DisplacementTrigger extends HTMLElement {
     const image1 = 'https://cdn.prod.website-files.com/691dda446874d92d72af7d03/696b998ca6fd3a1267e1342b_image%20315.avif';
     const image2 = 'https://cdn.prod.website-files.com/691dda446874d92d72af7d03/696b998c9085c8dc397ba853_image%20321.avif';
     const image3 = 'https://cdn.prod.website-files.com/691dda446874d92d72af7d03/696b998c52fe6011f65559df_image%20322.avif';
-    const displacementImage = 'https://images.unsplash.com/photo-1465146633011-14f8e0781093?fit=crop&w=512&h=512'; // "Drift" map
+    const displacementImage = 'https://static.wixstatic.com/media/914fc7_b081dc87e37041d8a6d47a325f51d521~mv2.jpeg';
 
     this.init(image1, image2, image3, displacementImage);
   }
@@ -325,24 +325,37 @@ class DisplacementTrigger extends HTMLElement {
     // ScrollTrigger auf dem threeTrigger Element
     this.scrollTrigger = ScrollTrigger.create({
       trigger: triggerElement, // Nutze das threeTrigger Element als Trigger
-      start: 'top bottom',
+      start: 'top top',
       end: 'bottom top',
       scrub: true, // Smooth scrubbing beim Scrollen
       onUpdate: (self) => {
         const progress = self.progress; // 0.0 → 1.0
 
-        // Berechne dispFactor1 (0% → 38%): Bild 1 → Bild 2
-        if (progress <= 0.38) {
-          this.material.uniforms.dispFactor1.value = Math.min(progress / 0.38, 1.0);
+        // 0% → 38%: Bild 1 (keine Transition)
+        if (progress < 0.38) {
+          this.material.uniforms.dispFactor1.value = 0.0;
           this.material.uniforms.dispFactor2.value = 0.0;
         }
-        // Berechne dispFactor2 (38% → 63%): Bild 2 → Bild 3
-        else if (progress <= 0.63) {
-          this.material.uniforms.dispFactor1.value = 1.0; // Erster Übergang abgeschlossen
-          const range = 0.63 - 0.38; // 0.25
-          this.material.uniforms.dispFactor2.value = Math.min((progress - 0.38) / range, 1.0);
+        // 38% → 48%: Transition Bild 1 → Bild 2
+        else if (progress >= 0.38 && progress <= 0.48) {
+          const range = 0.48 - 0.38; // 0.10
+          const localProgress = (progress - 0.38) / range; // 0.0 → 1.0 innerhalb des Bereichs
+          this.material.uniforms.dispFactor1.value = Math.min(localProgress, 1.0);
+          this.material.uniforms.dispFactor2.value = 0.0;
         }
-        // Bei > 63%: Beide Übergänge abgeschlossen
+        // 48% → 63%: Bild 2 (keine Transition)
+        else if (progress > 0.48 && progress < 0.63) {
+          this.material.uniforms.dispFactor1.value = 1.0; // Erster Übergang abgeschlossen
+          this.material.uniforms.dispFactor2.value = 0.0;
+        }
+        // 63% → 73%: Transition Bild 2 → Bild 3
+        else if (progress >= 0.63 && progress <= 0.73) {
+          this.material.uniforms.dispFactor1.value = 1.0;
+          const range = 0.73 - 0.63; // 0.10
+          const localProgress = (progress - 0.63) / range; // 0.0 → 1.0 innerhalb des Bereichs
+          this.material.uniforms.dispFactor2.value = Math.min(localProgress, 1.0);
+        }
+        // 73% → 100%: Bild 3 (beide Übergänge abgeschlossen)
         else {
           this.material.uniforms.dispFactor1.value = 1.0;
           this.material.uniforms.dispFactor2.value = 1.0;
