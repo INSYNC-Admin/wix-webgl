@@ -35,11 +35,32 @@ const FRAGMENT_SHADER = `
   uniform float intensity1;
   uniform float intensity2;
   uniform vec2 resolution;
+  uniform vec2 texture1Size;
+  uniform vec2 texture2Size;
+  uniform vec2 texture3Size;
   
   mat2 getRotM(float angle) {
     float s = sin(angle);
     float c = cos(angle);
     return mat2(c, -s, s, c);
+  }
+  
+  // Transformiert UV-Koordinaten für "cover"-Verhalten (wie CSS background-size: cover)
+  vec2 coverUV(vec2 uv, vec2 canvasSize, vec2 textureSize) {
+    float canvasAspect = canvasSize.x / canvasSize.y;
+    float textureAspect = textureSize.x / textureSize.y;
+    
+    vec2 scale = vec2(1.0);
+    if (canvasAspect > textureAspect) {
+      // Canvas ist breiter als Textur → skaliere entlang Y
+      scale.y = textureAspect / canvasAspect;
+    } else {
+      // Canvas ist höher als Textur → skaliere entlang X
+      scale.x = canvasAspect / textureAspect;
+    }
+    
+    // Zentriere und skaliere
+    return (uv - 0.5) * scale + 0.5;
   }
   
   void main() {
@@ -48,21 +69,40 @@ const FRAGMENT_SHADER = `
     
     vec4 finalColor;
     
-    // Erster Übergang: Bild 1 → Bild 2 (0% → 38%)
-    if (dispFactor1 < 1.0) {
-      vec2 dispPos1 = vUv + getRotM(angle1) * dispVec * intensity1 * dispFactor1;
-      vec2 dispPos2 = vUv + getRotM(angle2) * dispVec * intensity2 * (1.0 - dispFactor1);
+    // Vor 38%: Nur Bild 1 anzeigen (keine Transition)
+    if (dispFactor1 <= 0.0 && dispFactor2 <= 0.0) {
+      vec2 coverUV1 = coverUV(vUv, resolution, texture1Size);
+      finalColor = texture2D(texture1, coverUV1);
+    }
+    // Erster Übergang: Bild 1 → Bild 2 (38% → 48%)
+    else if (dispFactor1 > 0.0 && dispFactor1 < 1.0) {
+      vec2 coverUV1 = coverUV(vUv, resolution, texture1Size);
+      vec2 coverUV2 = coverUV(vUv, resolution, texture2Size);
+      vec2 dispPos1 = coverUV1 + getRotM(angle1) * dispVec * intensity1 * dispFactor1;
+      vec2 dispPos2 = coverUV2 + getRotM(angle2) * dispVec * intensity2 * (1.0 - dispFactor1);
       vec4 tex1 = texture2D(texture1, dispPos1);
       vec4 tex2 = texture2D(texture2, dispPos2);
       finalColor = mix(tex1, tex2, dispFactor1);
     }
-    // Zweiter Übergang: Bild 2 → Bild 3 (38% → 63%)
-    else {
-      vec2 dispPos2 = vUv + getRotM(angle1) * dispVec * intensity1 * dispFactor2;
-      vec2 dispPos3 = vUv + getRotM(angle2) * dispVec * intensity2 * (1.0 - dispFactor2);
+    // Zwischen 48% und 63%: Nur Bild 2 anzeigen (keine Transition)
+    else if (dispFactor1 >= 1.0 && dispFactor2 <= 0.0) {
+      vec2 coverUV2 = coverUV(vUv, resolution, texture2Size);
+      finalColor = texture2D(texture2, coverUV2);
+    }
+    // Zweiter Übergang: Bild 2 → Bild 3 (63% → 73%)
+    else if (dispFactor2 > 0.0 && dispFactor2 < 1.0) {
+      vec2 coverUV2 = coverUV(vUv, resolution, texture2Size);
+      vec2 coverUV3 = coverUV(vUv, resolution, texture3Size);
+      vec2 dispPos2 = coverUV2 + getRotM(angle1) * dispVec * intensity1 * dispFactor2;
+      vec2 dispPos3 = coverUV3 + getRotM(angle2) * dispVec * intensity2 * (1.0 - dispFactor2);
       vec4 tex2 = texture2D(texture2, dispPos2);
       vec4 tex3 = texture2D(texture3, dispPos3);
       finalColor = mix(tex2, tex3, dispFactor2);
+    }
+    // Nach 73%: Nur Bild 3 anzeigen (beide Übergänge abgeschlossen)
+    else {
+      vec2 coverUV3 = coverUV(vUv, resolution, texture3Size);
+      finalColor = texture2D(texture3, coverUV3);
     }
     
     gl_FragColor = finalColor;
@@ -84,6 +124,9 @@ class DisplacementTrigger extends HTMLElement {
     this.texture2 = null;
     this.texture3 = null;
     this.displacement = null;
+    this.texture1Size = null;
+    this.texture2Size = null;
+    this.texture3Size = null;
     this.scrollTrigger = null;
     this._resizeHandler = null;
     this._resizeTimeout = null;
@@ -238,13 +281,39 @@ class DisplacementTrigger extends HTMLElement {
       }
     };
 
-    this.texture1 = this.loader.load(image1, onTextureLoad);
+    // Lade Texturen und speichere ihre Dimensionen
+    this.texture1 = this.loader.load(image1, (texture) => {
+      if (texture.image) {
+        this.texture1Size = new THREE.Vector2(texture.image.width, texture.image.height);
+        // Aktualisiere Material, falls es bereits erstellt wurde
+        if (this.material && this.material.uniforms.texture1Size) {
+          this.material.uniforms.texture1Size.value = this.texture1Size;
+        }
+      }
+      onTextureLoad();
+    });
     this.texture1.minFilter = THREE.LinearFilter;
 
-    this.texture2 = this.loader.load(image2, onTextureLoad);
+    this.texture2 = this.loader.load(image2, (texture) => {
+      if (texture.image) {
+        this.texture2Size = new THREE.Vector2(texture.image.width, texture.image.height);
+        if (this.material && this.material.uniforms.texture2Size) {
+          this.material.uniforms.texture2Size.value = this.texture2Size;
+        }
+      }
+      onTextureLoad();
+    });
     this.texture2.minFilter = THREE.LinearFilter;
 
-    this.texture3 = this.loader.load(image3, onTextureLoad);
+    this.texture3 = this.loader.load(image3, (texture) => {
+      if (texture.image) {
+        this.texture3Size = new THREE.Vector2(texture.image.width, texture.image.height);
+        if (this.material && this.material.uniforms.texture3Size) {
+          this.material.uniforms.texture3Size.value = this.texture3Size;
+        }
+      }
+      onTextureLoad();
+    });
     this.texture3.minFilter = THREE.LinearFilter;
 
     this.displacement = this.loader.load(displacementImage, onTextureLoad);
@@ -269,6 +338,9 @@ class DisplacementTrigger extends HTMLElement {
     const width = this.offsetWidth || this.clientWidth || 512;
     const height = this.offsetHeight || this.clientHeight || 512;
 
+    // Fallback-Werte für Textur-Dimensionen (falls noch nicht geladen)
+    const defaultTextureSize = new THREE.Vector2(width, height);
+
     this.material = new THREE.ShaderMaterial({
       fragmentShader: FRAGMENT_SHADER,
       uniforms: {
@@ -284,10 +356,30 @@ class DisplacementTrigger extends HTMLElement {
         disp: { type: 't', value: this.displacement },
         resolution: {
           value: new THREE.Vector2(width, height)
+        },
+        texture1Size: {
+          value: this.texture1Size || defaultTextureSize.clone()
+        },
+        texture2Size: {
+          value: this.texture2Size || defaultTextureSize.clone()
+        },
+        texture3Size: {
+          value: this.texture3Size || defaultTextureSize.clone()
         }
       },
       vertexShader: VERTEX_SHADER
     });
+
+    // Aktualisiere Textur-Dimensionen, falls sie später geladen werden
+    if (this.texture1Size) {
+      this.material.uniforms.texture1Size.value = this.texture1Size;
+    }
+    if (this.texture2Size) {
+      this.material.uniforms.texture2Size.value = this.texture2Size;
+    }
+    if (this.texture3Size) {
+      this.material.uniforms.texture3Size.value = this.texture3Size;
+    }
 
     return this;
   }
@@ -326,7 +418,7 @@ class DisplacementTrigger extends HTMLElement {
     this.scrollTrigger = ScrollTrigger.create({
       trigger: triggerElement, // Nutze das threeTrigger Element als Trigger
       start: 'top top',
-      end: 'bottom top',
+      end: 'top bottom',
       scrub: true, // Smooth scrubbing beim Scrollen
       onUpdate: (self) => {
         const progress = self.progress; // 0.0 → 1.0
