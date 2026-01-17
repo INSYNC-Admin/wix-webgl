@@ -128,6 +128,7 @@ class DisplacementTrigger extends HTMLElement {
     this.texture2Size = null;
     this.texture3Size = null;
     this.scrollTrigger = null;
+    this.timeline = null;
     this._resizeHandler = null;
     this._resizeTimeout = null;
   }
@@ -414,47 +415,58 @@ class DisplacementTrigger extends HTMLElement {
       return;
     }
 
-    // ScrollTrigger auf dem threeTrigger Element
-    this.scrollTrigger = ScrollTrigger.create({
-      trigger: triggerElement, // Nutze das threeTrigger Element als Trigger
-      start: 'top top',
-      end: 'top bottom',
-      scrub: true, // Smooth scrubbing beim Scrollen
-      onUpdate: (self) => {
-        const progress = self.progress; // 0.0 → 1.0
+    // Initialisiere mit Bild 1 (keine Transition)
+    this.material.uniforms.dispFactor1.value = 0.0;
+    this.material.uniforms.dispFactor2.value = 0.0;
+    this.render();
 
-        // 0% → 38%: Bild 1 (keine Transition)
-        if (progress < 0.38) {
-          this.material.uniforms.dispFactor1.value = 0.0;
-          this.material.uniforms.dispFactor2.value = 0.0;
-        }
-        // 38% → 48%: Transition Bild 1 → Bild 2
-        else if (progress >= 0.38 && progress <= 0.48) {
-          const range = 0.48 - 0.38; // 0.10
-          const localProgress = (progress - 0.38) / range; // 0.0 → 1.0 innerhalb des Bereichs
-          this.material.uniforms.dispFactor1.value = Math.min(localProgress, 1.0);
-          this.material.uniforms.dispFactor2.value = 0.0;
-        }
-        // 48% → 63%: Bild 2 (keine Transition)
-        else if (progress > 0.48 && progress < 0.63) {
-          this.material.uniforms.dispFactor1.value = 1.0; // Erster Übergang abgeschlossen
-          this.material.uniforms.dispFactor2.value = 0.0;
-        }
-        // 63% → 73%: Transition Bild 2 → Bild 3
-        else if (progress >= 0.63 && progress <= 0.73) {
-          this.material.uniforms.dispFactor1.value = 1.0;
-          const range = 0.73 - 0.63; // 0.10
-          const localProgress = (progress - 0.63) / range; // 0.0 → 1.0 innerhalb des Bereichs
-          this.material.uniforms.dispFactor2.value = Math.min(localProgress, 1.0);
-        }
-        // 73% → 100%: Bild 3 (beide Übergänge abgeschlossen)
-        else {
-          this.material.uniforms.dispFactor1.value = 1.0;
-          this.material.uniforms.dispFactor2.value = 1.0;
-        }
-
+    // Erstelle GSAP Timeline für die Animationen
+    // Die Timeline läuft von 0 bis 100, wobei 100% = 100 Sekunden entspricht
+    // Dies ermöglicht präzise Positionierung der Keyframes
+    this.timeline = gsap.timeline({
+      paused: true,
+      onUpdate: () => {
         this.render();
       }
+    });
+
+    // Setze Startwerte bei 0%
+    this.timeline.set(this.material.uniforms.dispFactor1, { value: 0.0 }, 0);
+    this.timeline.set(this.material.uniforms.dispFactor2, { value: 0.0 }, 0);
+
+    // Bild 1 bleibt von 0% bis 38% (0 bis 38 Sekunden)
+    // Keine Animation nötig, Werte bleiben bei 0
+
+    // Transition Bild 1 → Bild 2: von 38% bis 48% (38 bis 48 Sekunden)
+    this.timeline.to(this.material.uniforms.dispFactor1, {
+      value: 1.0,
+      duration: 10, // 48 - 38 = 10 Sekunden
+      ease: 'none'
+    }, 38);
+
+    // Bild 2 bleibt von 48% bis 63% (48 bis 63 Sekunden)
+    // dispFactor1 bleibt bei 1.0, dispFactor2 bleibt bei 0.0
+    this.timeline.set(this.material.uniforms.dispFactor1, { value: 1.0 }, 48);
+
+    // Transition Bild 2 → Bild 3: von 63% bis 73% (63 bis 73 Sekunden)
+    this.timeline.to(this.material.uniforms.dispFactor2, {
+      value: 1.0,
+      duration: 10, // 73 - 63 = 10 Sekunden
+      ease: 'none'
+    }, 63);
+
+    // Bild 3 bleibt von 73% bis 100% (73 bis 100 Sekunden)
+    // Beide dispFactors bleiben bei 1.0
+    this.timeline.set(this.material.uniforms.dispFactor2, { value: 1.0 }, 73);
+
+    // ScrollTrigger mit Timeline verbinden
+    this.scrollTrigger = ScrollTrigger.create({
+      trigger: triggerElement,
+      start: 'top top',
+      end: 'bottom top',
+      scrub: true, // Smooth scrubbing beim Scrollen
+      markers: true, // Debug-Marker aktivieren
+      animation: this.timeline
     });
   }
 
@@ -465,6 +477,11 @@ class DisplacementTrigger extends HTMLElement {
   }
 
   cleanup() {
+    if (this.timeline) {
+      this.timeline.kill();
+      this.timeline = null;
+    }
+
     if (this.scrollTrigger) {
       this.scrollTrigger.kill();
       this.scrollTrigger = null;
