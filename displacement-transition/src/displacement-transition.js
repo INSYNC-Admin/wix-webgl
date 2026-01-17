@@ -128,7 +128,6 @@ class DisplacementTrigger extends HTMLElement {
     this.texture2Size = null;
     this.texture3Size = null;
     this.scrollTrigger = null;
-    this.timeline = null;
     this._resizeHandler = null;
     this._resizeTimeout = null;
   }
@@ -415,58 +414,91 @@ class DisplacementTrigger extends HTMLElement {
       return;
     }
 
-    // Initialisiere mit Bild 1 (keine Transition)
-    this.material.uniforms.dispFactor1.value = 0.0;
-    this.material.uniforms.dispFactor2.value = 0.0;
-    this.render();
+    // Definiere Schritte für die Animation (wie in der HTML-Datei)
+    // progress ist in Prozent (0-100), aber wir verwenden 0.0-1.0 für ScrollTrigger
+    const steps = [
+      {
+        progress: 0.0,
+        dispFactor1: 0.0,
+        dispFactor2: 0.0
+      },
+      {
+        progress: 0.38, // Bild 1 bleibt bis 38%
+        dispFactor1: 0.0,
+        dispFactor2: 0.0
+      },
+      {
+        progress: 0.48, // Transition Bild 1 → 2 abgeschlossen
+        dispFactor1: 1.0,
+        dispFactor2: 0.0
+      },
+      {
+        progress: 0.63, // Bild 2 bleibt bis 63%
+        dispFactor1: 1.0,
+        dispFactor2: 0.0
+      },
+      {
+        progress: 0.73, // Transition Bild 2 → 3 abgeschlossen
+        dispFactor1: 1.0,
+        dispFactor2: 1.0
+      },
+      {
+        progress: 1.0, // Bild 3 bleibt bis 100%
+        dispFactor1: 1.0,
+        dispFactor2: 1.0
+      }
+    ];
 
-    // Erstelle GSAP Timeline für die Animationen
-    // Die Timeline läuft von 0 bis 100, wobei 100% = 100 Sekunden entspricht
-    // Dies ermöglicht präzise Positionierung der Keyframes
-    this.timeline = gsap.timeline({
-      paused: true,
-      onUpdate: () => {
+    // Interpolationsfunktion (ähnlich wie in der HTML-Datei)
+    const interpolateStep = (currentProgress) => {
+      let startStep = null;
+      let endStep = null;
+
+      // Finde den richtigen Schritt-Bereich
+      for (let i = 0; i < steps.length - 1; i++) {
+        if (currentProgress >= steps[i].progress && currentProgress <= steps[i + 1].progress) {
+          startStep = steps[i];
+          endStep = steps[i + 1];
+          break;
+        }
+      }
+
+      if (startStep && endStep) {
+        // Berechne Progress innerhalb des Bereichs (0.0 - 1.0)
+        const progressInRange = (currentProgress - startStep.progress) / (endStep.progress - startStep.progress);
+
+        // Interpoliere die dispFactor-Werte
+        const dispFactor1 = gsap.utils.interpolate(startStep.dispFactor1, endStep.dispFactor1, progressInRange);
+        const dispFactor2 = gsap.utils.interpolate(startStep.dispFactor2, endStep.dispFactor2, progressInRange);
+
+        // Setze die Uniform-Werte
+        this.material.uniforms.dispFactor1.value = dispFactor1;
+        this.material.uniforms.dispFactor2.value = dispFactor2;
+
+        this.render();
+      } else {
+        // Fallback: Verwende den letzten oder ersten Schritt
+        const lastStep = steps[steps.length - 1];
+        this.material.uniforms.dispFactor1.value = lastStep.dispFactor1;
+        this.material.uniforms.dispFactor2.value = lastStep.dispFactor2;
         this.render();
       }
-    });
+    };
 
-    // Setze Startwerte bei 0%
-    this.timeline.set(this.material.uniforms.dispFactor1, { value: 0.0 }, 0);
-    this.timeline.set(this.material.uniforms.dispFactor2, { value: 0.0 }, 0);
+    // Initialisiere mit Progress 0.0 (Bild 1)
+    interpolateStep(0.0);
 
-    // Bild 1 bleibt von 0% bis 38% (0 bis 38 Sekunden)
-    // Keine Animation nötig, Werte bleiben bei 0
-
-    // Transition Bild 1 → Bild 2: von 38% bis 48% (38 bis 48 Sekunden)
-    this.timeline.to(this.material.uniforms.dispFactor1, {
-      value: 1.0,
-      duration: 10, // 48 - 38 = 10 Sekunden
-      ease: 'none'
-    }, 38);
-
-    // Bild 2 bleibt von 48% bis 63% (48 bis 63 Sekunden)
-    // dispFactor1 bleibt bei 1.0, dispFactor2 bleibt bei 0.0
-    this.timeline.set(this.material.uniforms.dispFactor1, { value: 1.0 }, 48);
-
-    // Transition Bild 2 → Bild 3: von 63% bis 73% (63 bis 73 Sekunden)
-    this.timeline.to(this.material.uniforms.dispFactor2, {
-      value: 1.0,
-      duration: 10, // 73 - 63 = 10 Sekunden
-      ease: 'none'
-    }, 63);
-
-    // Bild 3 bleibt von 73% bis 100% (73 bis 100 Sekunden)
-    // Beide dispFactors bleiben bei 1.0
-    this.timeline.set(this.material.uniforms.dispFactor2, { value: 1.0 }, 73);
-
-    // ScrollTrigger mit Timeline verbinden
+    // ScrollTrigger erstellen
     this.scrollTrigger = ScrollTrigger.create({
       trigger: triggerElement,
       start: 'top top',
       end: 'bottom top',
       scrub: true, // Smooth scrubbing beim Scrollen
       markers: true, // Debug-Marker aktivieren
-      animation: this.timeline
+      onUpdate: (self) => {
+        const progress = self.progress; // 0.0 → 1.0
+        interpolateStep(progress);
+      }
     });
   }
 
@@ -477,11 +509,6 @@ class DisplacementTrigger extends HTMLElement {
   }
 
   cleanup() {
-    if (this.timeline) {
-      this.timeline.kill();
-      this.timeline = null;
-    }
-
     if (this.scrollTrigger) {
       this.scrollTrigger.kill();
       this.scrollTrigger = null;
