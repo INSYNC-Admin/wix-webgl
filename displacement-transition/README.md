@@ -66,55 +66,50 @@ git push -u origin main
 
 ## 🔗 Verwendung in Wix
 
-### Methode 1: Direkte Script-Einbindung
+### Custom Element einrichten
 
-Füge das Script in dein Wix-Projekt ein:
-
-```html
-<script src="https://dein-projekt.vercel.app/displacement-transition.js"></script>
-```
-
-### Methode 2: Custom Element
-
-1. Erstelle ein Custom Element in Wix Studio
-2. Füge das Script als URL ein
-3. Nutze HTML mit der Klasse `threeTrigger`
+1. Öffne Wix Studio
+2. Gehe zu **Custom Elements** → **Add Custom Element**
+3. Fülle folgende Felder aus:
+   - **Tag Name**: `displacement-trigger`
+   - **Script URL**: `https://dein-projekt.vercel.app/displacement-transition.js`
+   - **Name**: z.B. "Displacement Transition"
+4. Speichere das Custom Element
+5. Ziehe das Element auf deine Seite
 
 ### HTML-Struktur
 
+In deinem Custom Element HTML Editor:
+
 ```html
-<div 
-  class="threeTrigger" 
+<displacement-trigger 
+  class="threeTrigger"
   data-image1="https://cdn.prod.website-files.com/691dda446874d92d72af7d03/696b998ca6fd3a1267e1342b_image%20315.avif"
   data-image2="https://cdn.prod.website-files.com/691dda446874d92d72af7d03/696b998c9085c8dc397ba853_image%20321.avif"
   data-image3="https://cdn.prod.website-files.com/691dda446874d92d72af7d03/696b998c52fe6011f65559df_image%20322.avif"
   data-displacement="https://images.unsplash.com/photo-1465146633011-14f8e0781093?fit=crop&w=512&h=512"
   style="width: 100%; height: 600px;"
-></div>
+></displacement-trigger>
 ```
 
-### Data-Attribute
+### Wichtig
 
-- `data-image1`: URL zum ersten Bild
-- `data-image2`: URL zum zweiten Bild
-- `data-image3`: URL zum dritten Bild
-- `data-displacement`: URL zur Displacement Map (optional, nutzt Standard "Drift" Map wenn nicht angegeben)
+- **Tag Name**: Muss genau `displacement-trigger` sein
+- **Klasse**: Die Klasse `threeTrigger` ist optional, wird aber empfohlen für zusätzliche Styling-Möglichkeiten
+- **Data-Attribute**: Alle drei Bilder sind Pflicht
+  - `data-image1`: URL zum ersten Bild
+  - `data-image2`: URL zum zweiten Bild
+  - `data-image3`: URL zum dritten Bild
+  - `data-displacement`: URL zur Displacement Map (optional, nutzt Standard "Drift" Map wenn nicht angegeben)
+- **Höhe**: Das Element sollte eine Mindesthöhe haben (z.B. `height: 600px`) für ausreichenden Scroll-Bereich
 
-### JavaScript API (Optional)
+### Funktionsweise
 
-Du kannst den Displacer auch programmatisch erstellen:
-
-```javascript
-const displacer = new ScrollDisplacer({
-  element: document.querySelector('.threeTrigger'),
-  image1: 'url-zum-bild-1.jpg',
-  image2: 'url-zum-bild-2.jpg',
-  image3: 'url-zum-bild-3.jpg',
-  displacementImage: 'url-zur-drift-map.jpg',
-  intensity: 0.8,
-  angle: Math.PI / 4
-});
-```
+Das Custom Element:
+- Initialisiert automatisch beim Laden
+- Lädt die Bilder aus den data-Attributen
+- Nutzt sich selbst als ScrollTrigger (trigger: this)
+- Startet Transitions automatisch beim Scrollen
 
 ## ⚙️ Scroll-Progress-Punkte
 
