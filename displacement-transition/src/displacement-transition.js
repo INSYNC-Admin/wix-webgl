@@ -400,19 +400,32 @@ class DisplacementTrigger extends HTMLElement {
   }
 
   setupScrollTrigger() {
-    if (!this.material || !ScrollTrigger) return;
+    console.log('[DisplacementTrigger] setupScrollTrigger called');
+    
+    if (!this.material) {
+      console.error('[DisplacementTrigger] Material not available');
+      return;
+    }
+    
+    if (!ScrollTrigger) {
+      console.error('[DisplacementTrigger] ScrollTrigger not available');
+      return;
+    }
 
     // Suche nach Element mit Klasse "threeTrigger"
     const triggerElement = document.querySelector('.threeTrigger');
     
     if (!triggerElement) {
-      console.warn('DisplacementTrigger: Element with class "threeTrigger" not found');
+      console.warn('[DisplacementTrigger] Element with class "threeTrigger" not found, retrying...');
       // Retry nach kurzer Verzögerung (falls DOM noch nicht vollständig geladen)
       setTimeout(() => {
         this.setupScrollTrigger();
       }, 500);
       return;
     }
+
+    console.log('[DisplacementTrigger] Trigger element found:', triggerElement);
+    console.log('[DisplacementTrigger] Trigger element bounds:', triggerElement.getBoundingClientRect());
 
     // Definiere Schritte für die Animation (wie in der HTML-Datei)
     // progress ist in Prozent (0-100), aber wir verwenden 0.0-1.0 für ScrollTrigger
@@ -449,6 +462,8 @@ class DisplacementTrigger extends HTMLElement {
       }
     ];
 
+    console.log('[DisplacementTrigger] Steps defined:', steps);
+
     // Interpolationsfunktion (ähnlich wie in der HTML-Datei)
     const interpolateStep = (currentProgress) => {
       let startStep = null;
@@ -475,20 +490,35 @@ class DisplacementTrigger extends HTMLElement {
         this.material.uniforms.dispFactor1.value = dispFactor1;
         this.material.uniforms.dispFactor2.value = dispFactor2;
 
+        // Debug-Log (nur alle 20 Updates, um Console nicht zu überfluten)
+        if (Math.floor(currentProgress * 100) % 5 === 0 || currentProgress === 0 || currentProgress === 1) {
+          console.log(`[DisplacementTrigger] Progress: ${(currentProgress * 100).toFixed(2)}% | dispFactor1: ${dispFactor1.toFixed(3)} | dispFactor2: ${dispFactor2.toFixed(3)} | Step: ${startStep.progress} → ${endStep.progress}`);
+        }
+
         this.render();
       } else {
         // Fallback: Verwende den letzten oder ersten Schritt
         const lastStep = steps[steps.length - 1];
         this.material.uniforms.dispFactor1.value = lastStep.dispFactor1;
         this.material.uniforms.dispFactor2.value = lastStep.dispFactor2;
+        console.warn(`[DisplacementTrigger] No step found for progress ${currentProgress}, using fallback values`);
         this.render();
       }
     };
 
     // Initialisiere mit Progress 0.0 (Bild 1)
+    console.log('[DisplacementTrigger] Initializing with progress 0.0');
     interpolateStep(0.0);
 
     // ScrollTrigger erstellen
+    console.log('[DisplacementTrigger] Creating ScrollTrigger with:', {
+      trigger: triggerElement,
+      start: 'top top',
+      end: 'bottom top',
+      scrub: true,
+      markers: true
+    });
+
     this.scrollTrigger = ScrollTrigger.create({
       trigger: triggerElement,
       start: 'top top',
@@ -498,8 +528,24 @@ class DisplacementTrigger extends HTMLElement {
       onUpdate: (self) => {
         const progress = self.progress; // 0.0 → 1.0
         interpolateStep(progress);
+      },
+      onEnter: () => {
+        console.log('[DisplacementTrigger] ScrollTrigger entered');
+      },
+      onLeave: () => {
+        console.log('[DisplacementTrigger] ScrollTrigger left');
+      },
+      onEnterBack: () => {
+        console.log('[DisplacementTrigger] ScrollTrigger entered back');
+      },
+      onLeaveBack: () => {
+        console.log('[DisplacementTrigger] ScrollTrigger left back');
       }
     });
+
+    console.log('[DisplacementTrigger] ScrollTrigger created:', this.scrollTrigger);
+    console.log('[DisplacementTrigger] ScrollTrigger start:', this.scrollTrigger.start);
+    console.log('[DisplacementTrigger] ScrollTrigger end:', this.scrollTrigger.end);
   }
 
   render() {
