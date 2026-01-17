@@ -98,30 +98,12 @@ class DisplacementTrigger extends HTMLElement {
     this.style.position = 'relative';
     this.style.overflow = 'hidden';
 
-    // Warte kurz, damit Attribute gesetzt werden können (wichtig für Wix)
-    setTimeout(() => {
-      this.initFromAttributes();
-    }, 100);
-  }
-
-  initFromAttributes() {
-    // Lade Bilder aus data-Attributen
-    // Nutze verschiedene Methoden, um Attribute zu lesen (für Kompatibilität)
-    const image1 = this.dataset.image1 || this.getAttribute('data-image1');
-    const image2 = this.dataset.image2 || this.getAttribute('data-image2');
-    const image3 = this.dataset.image3 || this.getAttribute('data-image3');
-    const displacementImage = (this.dataset.displacement || this.getAttribute('data-displacement')) || 
-      'https://images.unsplash.com/photo-1465146633011-14f8e0781093?fit=crop&w=512&h=512'; // Default "Drift" map
-
-    if (!image1 || !image2 || !image3) {
-      console.error('DisplacementTrigger: Missing required data attributes', {
-        image1: image1 || 'missing',
-        image2: image2 || 'missing',
-        image3: image3 || 'missing',
-        allAttributes: Array.from(this.attributes).map(attr => `${attr.name}="${attr.value}"`).join(', ')
-      });
-      return;
-    }
+    // Bilder direkt hardcoden (wie Globe Pointer)
+    // In Wix Custom Elements funktionieren data-Attribute nicht zuverlässig
+    const image1 = 'https://cdn.prod.website-files.com/691dda446874d92d72af7d03/696b998ca6fd3a1267e1342b_image%20315.avif';
+    const image2 = 'https://cdn.prod.website-files.com/691dda446874d92d72af7d03/696b998c9085c8dc397ba853_image%20321.avif';
+    const image3 = 'https://cdn.prod.website-files.com/691dda446874d92d72af7d03/696b998c52fe6011f65559df_image%20322.avif';
+    const displacementImage = 'https://images.unsplash.com/photo-1465146633011-14f8e0781093?fit=crop&w=512&h=512'; // "Drift" map
 
     this.init(image1, image2, image3, displacementImage);
   }
