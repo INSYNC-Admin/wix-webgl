@@ -5,7 +5,7 @@
 const UNICORN_STUDIO_VERSION = '1.0.0';
 
 // Hardcodierte Project ID
-const PROJECT_ID = 'XN9H16FK5J2LQYg5KVLq';
+const PROJECT_ID = 'EzNcEdNiO36uwZzrrnXT';
 
 class UnicornStudioEmbed extends HTMLElement {
   constructor() {
