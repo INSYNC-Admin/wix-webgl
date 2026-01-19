@@ -9,8 +9,11 @@
     "install:displacement": "cd displacement-transition && npm install",
     "build:displacement": "cd displacement-transition && npm install && npm run build && cp public/displacement-transition.js ../public/",
     "dev:displacement": "cd displacement-transition && npm run dev",
-    "build": "mkdir -p public && npm run build:globe && npm run build:displacement",
-    "install:all": "npm install && cd displacement-transition && npm install",
+    "install:unicorn": "cd unicorn-studio && npm install",
+    "build:unicorn": "cd unicorn-studio && npm install && npm run build && cp public/unicorn-studio.js ../public/",
+    "dev:unicorn": "cd unicorn-studio && npm run dev",
+    "build": "mkdir -p public && npm run build:globe && npm run build:displacement && npm run build:unicorn",
+    "install:all": "npm install && cd displacement-transition && npm install && cd ../unicorn-studio && npm install",
     "vercel-build": "npm run install:all && npm run build"
   },
   "keywords": [

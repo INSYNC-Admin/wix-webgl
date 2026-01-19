@@ -1,0 +1,23 @@
+{
+  "name": "unicorn-studio",
+  "version": "1.0.0",
+  "description": "Unicorn Studio Custom Element for Wix Studio",
+  "main": "public/unicorn-studio.js",
+  "scripts": {
+    "build": "esbuild src/unicorn-studio.js --bundle --minify --format=iife --outfile=public/unicorn-studio.js",
+    "dev": "esbuild src/unicorn-studio.js --bundle --format=iife --outfile=public/unicorn-studio.js --watch"
+  },
+  "keywords": [
+    "unicorn-studio",
+    "wix",
+    "custom-element",
+    "3d",
+    "canvas"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {},
+  "devDependencies": {
+    "esbuild": "^0.23.0"
+  }
+}
